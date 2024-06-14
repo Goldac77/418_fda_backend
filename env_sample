@@ -1,0 +1,6 @@
+#rename this file to ".env" and give the variables their required data
+
+DB_HOST = "DB HOST NAME"
+DB_USER = "DB USER NAME"
+DB_PASSWORD = "DB PASSWORD"
+DB_NAME = "DB NAME"

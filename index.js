@@ -1,7 +1,9 @@
-import express from "express";
+import express, { query } from "express";
 import cors from 'cors';
 import dotenv from "dotenv";
-import logHttpRequest from "./utils/http_logs.js";
+import { logsRequest } from "./utils/logs.js";
+import executeQuery from "./utils/db_queryExecute.js";
+import accessCheck from "./utils/accessCheck.js";
 
 const app = express();
 const port = 3000;
@@ -18,12 +20,29 @@ app.use((req, res, next) => {
         body: req.body,
         timestamp: new Date().toISOString(),
     };
-    logHttpRequest(httpLogData);
+    logsRequest(httpLogData);
     next();
 })
 
 app.get("/", (req, res) => {
     res.status(200).send("Beep boop, server is active");
+})
+
+//This retrieves all user data
+app.get("/users/:userID", async (req, res) => {
+    const query = `
+            SELECT Users.*, Roles.Role_Name
+            FROM Users
+            JOIN Roles ON Users.Role_ID = Roles.Role_ID
+        `;
+
+    try {
+        const userData = await executeQuery(query, []);
+        return res.status(200).json({ userData });
+    } catch (error) {
+        console.log("Failed to get user data", error)
+        res.status(500).json({ error: error.message })
+    }
 })
 
 app.listen(port, () => {

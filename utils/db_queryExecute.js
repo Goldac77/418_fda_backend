@@ -1,4 +1,8 @@
 import createConnection from "./db_connection.js";
+import dotenv from "dotenv";
+import {logsRequest} from './logs.js'
+
+dotenv.config();
 
 const executeQuery = async (query, params) => {
     const connection = createConnection();
@@ -7,8 +11,10 @@ const executeQuery = async (query, params) => {
         await new Promise((resolve, reject) => {
             connection.connect((err) => {
                 if (err) {
+                    console.log("Failed to connect to database");
                     reject(err);
                 } else {
+                    console.log(`Connected to ${process.env.DB_NAME} database`);
                     resolve();
                 }
             });
@@ -19,6 +25,12 @@ const executeQuery = async (query, params) => {
                 if (error) {
                     reject(error);
                 } else {
+                    const logData = {
+                        query,
+                        params,
+                        timestamp: new Date().toISOString()
+                    };
+                    logsRequest(logData);
                     resolve(results);
                 }
             });
@@ -32,6 +44,7 @@ const executeQuery = async (query, params) => {
                     console.error('Error closing connection:', err);
                     reject(err);
                 } else {
+                    console.log("Database connection closed")
                     resolve();
                 }
             });

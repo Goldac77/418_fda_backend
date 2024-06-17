@@ -6,7 +6,7 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const logHttpRequest = (logData) => {
+const logsRequest = (logData) => {
     const logFilePath = path.join(__dirname, '../logs/logs.txt');
     const formattedLog = JSON.stringify(logData, null, 2);
 
@@ -17,4 +17,10 @@ const logHttpRequest = (logData) => {
     });
 };
 
-export default logHttpRequest;
+const logBeforeShutdown = async() => {
+    console.log("Shutdown/Restart incoming....... \nSending last log");
+    await sendLogCopy();
+    process.exit(0);
+}
+
+export {logsRequest, logBeforeShutdown};

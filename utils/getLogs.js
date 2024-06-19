@@ -13,7 +13,7 @@ const getLogs = async() => {
             }
         })
 
-        return console.log({remoteLogs: getRemoteLogUrl(response.data)}, {localLogs: logArray});
+        return ({remoteLogs: getRemoteLogUrl(response.data)}, {localLogs: logArray});
     } catch(error) {
         console.log("Error getting logs", error)
     }

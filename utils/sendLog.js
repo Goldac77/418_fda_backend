@@ -6,7 +6,10 @@ dotenv.config();
 
 const sendLogCopy = async () => {
     try {
-        const files = JSON.stringify(logArray, null, 2);
+        const files = {};
+        logArray.forEach((log, index) => {
+            files[`log_${index}.json`] = { content: JSON.stringify(log, null, 2) };
+        });
 
         const response = await axios.post('https://api.github.com/gists',
             {

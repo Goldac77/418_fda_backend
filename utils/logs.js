@@ -1,4 +1,5 @@
 import sendLogCopy from './sendLog.js';
+import logArray from './localLogs.js';
 
 const logsRequest = (logData) => {
     logArray.push(logData);

@@ -21,8 +21,7 @@ const sendLogCopy = async () => {
         });
 
         files["localLogs.txt"] = {content: logContent}; //for local testing
-        const response = await axios.post(
-            'https://api.github.com/gists',
+        const response = await axios.post('https://api.github.com/gists',
             {
                 description: '418_FDA_Logs',
                 public: false,

@@ -5,6 +5,7 @@ import { logBeforeShutdown, logsRequest } from "./utils/logs.js";
 import executeQuery from "./utils/db_queryExecute.js";
 import hashFunction from "./utils/hash.js";
 import accessCheck from "./utils/accessCheck.js";
+import getLogs from "./utils/getLogs.js";
 
 const app = express();
 const port = 3000;
@@ -65,6 +66,24 @@ app.get("/assets/userID", async (req, res) => {
     }
 })
 
+//Get logs
+app.get("/logs/:userID", async (req, res) => {
+    const { userID } = req.params;
+
+    try {
+        const isNotAuthorized = await accessCheck(userID) == "Department Head";
+        if (isNotAuthorized) {
+            return res.status(403).json({ message: "You aren't authorized" });
+        } else {
+            const logData = await getLogs();
+            return res.status(200).json({ logData }); 
+        }
+    } catch (error) {
+        console.log("Failed to get log data", error)
+        return res.status(500).json({ error: error.message })
+    }
+})
+
 //User authentication
 app.post("/login", async (req, res) => {
     const { userID, password } = req.body;
@@ -112,8 +131,8 @@ app.delete("/user/:userID/:targetUserID", async (req, res) => {
         const isAuthorized = await accessCheck(userID) == "Admin" || await accessCheck(userID) == "Department Head";
 
         if (isAuthorized) {
-            const userDeleted = await executeQuery(query, [targetUserID], userID);
-            if (userDeleted) {
+            const assetDeleted = await executeQuery(query, [targetUserID], userID);
+            if (assetDeleted) {
                 return res.status(200).json({ message: 'User deleted successfully' });
             } else {
                 return res.status(404).json({ error: 'User not found' });
@@ -138,11 +157,11 @@ app.delete("/user/:userID/:targetAssetID", async (req, res) => {
         if (isNotAuthorized) {
             return res.status(403).json({ message: "You aren't authorized" });
         } else {
-            const userDeleted = await executeQuery(query, [targetAssetID], userID);
-            if (userDeleted) {
-                return res.status(200).json({ message: 'User deleted successfully' });
+            const assetDeleted = await executeQuery(query, [targetAssetID], userID);
+            if (assetDeleted) {
+                return res.status(200).json({ message: 'Asset deleted successfully' });
             } else {
-                return res.status(404).json({ error: 'User not found' });
+                return res.status(404).json({ error: 'Asset not found' });
             }
         }
     } catch (error) {

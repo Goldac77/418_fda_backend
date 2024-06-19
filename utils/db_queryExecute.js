@@ -4,7 +4,7 @@ import {logsRequest} from './logs.js'
 
 dotenv.config();
 
-const executeQuery = async (query, params) => {
+const executeQuery = async (query, params, userID) => {
     const connection = createConnection();
     
     try {
@@ -26,6 +26,7 @@ const executeQuery = async (query, params) => {
                     reject(error);
                 } else {
                     const logData = {
+                        userID,
                         query,
                         params,
                         timestamp: new Date().toISOString()

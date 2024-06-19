@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import sendLogCopy from './sendLog.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -20,7 +21,6 @@ const logsRequest = (logData) => {
 const logBeforeShutdown = async() => {
     console.log("Shutdown/Restart incoming....... \nSending last log");
     await sendLogCopy();
-    process.exit(0);
 }
 
 export {logsRequest, logBeforeShutdown};

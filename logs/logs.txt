@@ -674,3 +674,36 @@
   "body": {},
   "timestamp": "2024-06-19T05:05:19.675Z"
 }
+{
+  "method": "GET",
+  "url": "/users/1203485716",
+  "headers": {
+    "content-length": "56",
+    "accept-encoding": "gzip, deflate, br",
+    "cookie": "connect.sid=s%3AJKssq6mUBeuyC_Yz-od56U4wDkeCTXIm.%2Fn3Ud0BtTXjAF4jT61uBLYsMePfQksfhgZdTnKSPe3c",
+    "accept": "*/*",
+    "user-agent": "Thunder Client (https://www.thunderclient.com)",
+    "content-type": "application/json",
+    "host": "localhost:3000",
+    "connection": "close"
+  },
+  "body": {
+    "userID": "1203485716",
+    "password": "w5P@Jk3^Zm"
+  },
+  "timestamp": "2024-06-19T06:02:56.918Z"
+}
+{
+  "userID": "1203485716",
+  "query": "\n        SELECT Roles.Role_Name\n        FROM Users\n        JOIN Roles ON Users.Role_ID = Roles.Role_ID\n        WHERE Users.User_ID = ?\n    ",
+  "params": [
+    "1203485716"
+  ],
+  "timestamp": "2024-06-19T06:02:59.377Z"
+}
+{
+  "userID": "1203485716",
+  "query": "\n            SELECT Users.*, Roles.Role_Name\n            FROM Users\n            JOIN Roles ON Users.Role_ID = Roles.Role_ID\n        ",
+  "params": [],
+  "timestamp": "2024-06-19T06:03:01.609Z"
+}

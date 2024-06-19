@@ -19,19 +19,14 @@ const sendLogCopy = async () => {
         logArray.forEach((log, index) => {
             files[`log_${index}.txt`] = { content: log };
         });
+
+        files["localLogs.txt"] = {content: logContent}; //for local testing
         const response = await axios.post(
             'https://api.github.com/gists',
             {
                 description: '418_FDA_Logs',
                 public: false,
-                files: {
-                    'Renderlogs.txt': {
-                        content: files
-                    },
-                    "Locallogs": {
-                        content: logContent
-                    }
-                }
+                files: files
             },
             {
                 headers: {

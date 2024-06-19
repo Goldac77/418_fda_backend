@@ -1,7 +1,7 @@
 import axios from 'axios';
 import dotenv from 'dotenv';
 dotenv.config();
-import logArray from './renderLogs.js';
+import logArray from './localLogs.js';
 
 const getLogs = async() => {
     try {

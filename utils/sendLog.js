@@ -1,25 +1,13 @@
 import axios from 'axios';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
 import dotenv from 'dotenv';
+import logArray from './localLogs.js';
 dotenv.config();
-import logArray from './renderLogs.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const logFilePath = path.join(__dirname, '../logs/logs.txt');
-const logContent = fs.readFileSync(logFilePath, 'utf8');
 
 const sendLogCopy = async () => {
     try {
-        const files = {};
-        logArray.forEach((log, index) => {
-            files[`log_${index}.txt`] = { content: log };
-        });
-        
+        const files = JSON.stringify(logArray, null, 2);
+
         const response = await axios.post('https://api.github.com/gists',
             {
                 description: '418_FDA_Logs',

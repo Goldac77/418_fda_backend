@@ -26,7 +26,7 @@ const executeQuery = async (operation, collectionName, params, userID) => {
                 results = await collection.insertOne(params);
                 break;
             case 'updateOne':
-                results = await collection.updateOne(filter, update);
+                results = await collection.updateOne(params, update);
                 break;
             case 'deleteOne':
                 results = await collection.deleteOne(params);

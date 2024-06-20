@@ -87,10 +87,9 @@ app.get("/roles", async(req, res) => {
 //DO NOT TOUCH THE CODE ABOVE, ELSE I'LL COME FOR YOU!!
 
 //This retrieves all user data
-app.get("/users", async (req, res) => {
+app.get("/users/:userID", async (req, res) => {
     const { userID } = req.params;
     try {
-        const userData = await executeQuery("find", "User", {}, userID);
         const accessLevel = checkRole(userID);
         const isNotAuthorized = accessLevel == "Asset Manager";
         if (isNotAuthorized) {

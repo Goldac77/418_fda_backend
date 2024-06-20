@@ -139,7 +139,7 @@ app.get("/users/:userID", async (req, res) => {
 })
 
 //Get all assets
-app.get("/assets/userID", async (req, res) => {
+app.get("/assets/:userID", async (req, res) => {
     const { userID } = req.params;
     const getAssetAggregationPipeline = () => {
         return [

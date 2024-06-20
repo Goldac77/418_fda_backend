@@ -250,7 +250,7 @@ app.put("/user/:userID", async (req, res) => {
         // Prepare update object with new user details
         const update = {};
         if (newEmail) update.Email = newEmail;
-        if (newRoleID) update.Role_Name = newRoleName;
+        if (newRoleName) update.Role_Name = newRoleName;
 
         // Update user details in the database
         const result = await executeQuery("updateOne", "Users", { User_ID: targetUserID }, { $set: update }, userID);

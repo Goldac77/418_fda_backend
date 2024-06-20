@@ -236,7 +236,7 @@ app.post("/assets/:userID", async (req, res) => {
         if (isAuthorized) {
             // Insert asset data into the database
             const status = await executeQuery("find", "AssetStatus", {Status_Name: assetStatus}, userID);
-            if(!status) {
+            if(status.length == 0) {
                 return res.status(404).json({message: "Invalid Status"});
             }
             const result = await executeQuery('insertOne', 'Asset', {

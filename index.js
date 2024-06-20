@@ -55,6 +55,9 @@ app.post("/users", async (req, res) => {
         }
         const hashPassword = hashFunction(Password);
         const result = await executeQuery('insertOne', 'User', { Password: hashPassword, Email, Role_ID: role[0].Role_ID });
+        if(result == 409) {
+            return res.status(409).json({message: "User already exists"});
+        }
         res.status(201).json({ message: 'User created successfully', result });
     } catch (error) {
         console.error('Error creating user:', error);
@@ -170,7 +173,9 @@ app.post("/assets/userID", async (req, res) => {
                 Status_ID: status[0].Status_ID
             });
 
-            // Return success response
+            if(result == 409) {
+                return res.status(409).json({message: "Asset already exists"});
+            }
             return res.status(201).json({ message: 'Asset added successfully', asset: result });
         } else {
             return res.status(403).json({ message: "You aren't authorized" });

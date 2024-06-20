@@ -94,7 +94,7 @@ app.get("/users/:userID", async (req, res) => {
     const getUserAggregationPipeline = () => {
         return [
             {
-                $match: { _id: ObjectId.createFromHexString(userID) }
+                $match: { }
             },
             {
                 $lookup: {
@@ -144,10 +144,13 @@ app.get("/assets/:userID", async (req, res) => {
     const getAssetAggregationPipeline = () => {
         return [
             {
+                $match: {}
+            },
+            {
                 $lookup: {
                     from: "AssetStatus",
                     localField: "Status_ID",
-                    foreignField: "Status_ID",
+                    foreignField: "_id",
                     as: "status"
                 }
             },

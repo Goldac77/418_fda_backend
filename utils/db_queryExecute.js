@@ -50,7 +50,7 @@ const executeQuery = async (operation, collectionName, params, userID) => {
         throw error;
     } finally {
         console.log("Closing database connection");
-        client.close();
+        await client.close();
     }
 };
 

@@ -195,8 +195,8 @@ app.delete("/user/:userID/:targetUserID", async (req, res) => {
         const isAuthorized = accessLevel == "Admin" || accessLevel == "Department Head";
 
         if (isAuthorized) {
-            const assetDeleted = await executeQuery("deleteOne", "User", {targetUserID}, userID);
-            if (assetDeleted) {
+            const userDeleted = await executeQuery("deleteOne", "User", {targetUserID}, userID);
+            if (userDeleted) {
                 return res.status(200).json({ message: 'User deleted successfully' });
             } else {
                 return res.status(404).json({ error: 'User not found' });

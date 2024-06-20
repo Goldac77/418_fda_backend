@@ -10,7 +10,7 @@ const checkRole = async(userID) => {
         }
 
         // Fetch role name using the role ID from the user
-        const roleID = user[0].Role_ID;
+        const roleID = user[0]._id;
         const role = await executeQuery("find", "Roles", { Role_ID: roleID }, userID);
 
         if (role.length === 0) {

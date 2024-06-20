@@ -1,9 +1,9 @@
 import logArray from './localLogs.js';
 import executeQuery from './db_queryExecute.js';
 
-const getLogs = async() => {
+const getLogs = async(userID) => {
     try {
-        const remoteLogs = await getRemoteLog();
+        const remoteLogs = await getRemoteLog(userID);
         const localLogs = logArray;
 
         return { remoteLogs, localLogs };
@@ -13,7 +13,7 @@ const getLogs = async() => {
 }
 
 // get logs from database
-const getRemoteLog = async() => {
+const getRemoteLog = async(userID) => {
     const remoteLog = await executeQuery("find", "Logs", { }, userID);
     return remoteLog;
 }

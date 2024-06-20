@@ -49,18 +49,32 @@ app.post("/roles", async (req, res) => {
 app.post("/users", async (req, res) => {
     const { Password, Email, Role } = req.body;
     try {
-        const role = await executeQuery('find', 'Role', { Role_Name: Role });
+        const role = await executeQuery('find', 'Role', { Role_Name: Role }, null);
         if (role.length === 0) {
             return res.status(400).json({ error: 'Role not found' });
         }
         const hashPassword = hashFunction(Password);
-        const result = await executeQuery('insertOne', 'User', { Password: hashPassword, Email, Role_ID: role[0].Role_ID });
+        const result = await executeQuery('insertOne', 'User', { Password: hashPassword, Email, Role_ID: role[0]._id });
         if(result == 409) {
             return res.status(409).json({message: "User already exists"});
         }
         res.status(201).json({ message: 'User created successfully', result });
     } catch (error) {
         console.error('Error creating user:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+})
+
+app.post("/assetStatus", async(req, res) => {
+    const {statusName} = req.body;
+    try {
+        const result = await executeQuery('insertOne', 'AssetStatus', { Status_Name: statusName });
+        if(result == 409) {
+            return res.status(409).json({message: "Asset status already exists"});
+        }
+        res.status(201).json({ message: 'Asset status created successfully', result });
+    } catch (error) {
+        console.error('Error creating assetStatus:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 })
@@ -73,9 +87,10 @@ app.get("/roles", async(req, res) => {
 //DO NOT TOUCH THE CODE ABOVE, ELSE I'LL COME FOR YOU!!
 
 //This retrieves all user data
-app.get("/users/:userID", async (req, res) => {
+app.get("/users", async (req, res) => {
     const { userID } = req.params;
     try {
+        const userData = await executeQuery("find", "User", {}, userID);
         const accessLevel = checkRole(userID);
         const isNotAuthorized = accessLevel == "Asset Manager";
         if (isNotAuthorized) {
@@ -112,7 +127,7 @@ app.get("/logs/:userID", async (req, res) => {
         if (isNotAuthorized) {
             return res.status(403).json({ message: "You aren't authorized" });
         } else {
-            const logData = await getLogs();
+            const logData = await getLogs(userID);
             return res.status(200).json({ logData });
         }
     } catch (error) {
@@ -138,7 +153,7 @@ app.post("/login", async (req, res) => {
 
         if (isPasswordMatch) {
             // Fetch role name using the role ID from the user
-            const roleID = user[0].Role_ID;
+            const roleID = user[0]._id;
             const role = await executeQuery("find", "Role", { Role_ID: roleID }, userID);
             return res.status(200).json({ message: "Login successful" }, { userID, role });
         } else {
@@ -170,7 +185,7 @@ app.post("/assets/userID", async (req, res) => {
                 Serial_Number: serialNumber,
                 Asset_Name: assetName,
                 Procurement_Date: procurementDate,
-                Status_ID: status[0].Status_ID
+                Status_ID: status[0]._id
             });
 
             if(result == 409) {

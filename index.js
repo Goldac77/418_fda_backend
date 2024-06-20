@@ -272,11 +272,12 @@ app.delete("/user/:userID/:targetUserID", async (req, res) => {
         const isAuthorized = accessLevel == "Admin" || accessLevel == "Department Head";
 
         if (isAuthorized) {
-            const userDeleted = await executeQuery("deleteOne", "User", {_id: ObjectId.createFromHexString(targetUserID)}, userID);
-            if (userDeleted.acknowledged) {
-                return res.status(200).json({ message: 'User deleted successfully' });
-            } else {
+            const invaldTargetId = !ObjectId.isValid(targetUserID);
+            if (invaldTargetId) {
                 return res.status(404).json({ error: 'User not found' });
+            } else {
+                const userDeleted = await executeQuery("deleteOne", "User", {_id: ObjectId.createFromHexString(targetUserID)}, userID);
+                return res.status(200).json({ message: 'User deleted successfully', userDeleted });
             }
         } else {
             return res.status(403).json({ message: "You aren't authorized" });
@@ -298,11 +299,12 @@ app.delete("/asset/:userID/:targetAssetID", async (req, res) => {
         if (isNotAuthorized) {
             return res.status(403).json({ message: "You aren't authorized" });
         } else {
-            const assetDeleted = await executeQuery("deleteOne", "Asset", {_id: ObjectId.createFromHexString(targetAssetID)}, userID);
-            if (assetDeleted) {
-                return res.status(200).json({ message: 'Asset deleted successfully' });
-            } else {
+            const invaldTargetId = !ObjectId.isValid(targetAssetID);
+            if(invaldTargetId) {
                 return res.status(404).json({ error: 'Asset not found' });
+            } else {
+                const assetDeleted = await executeQuery("deleteOne", "Asset", {_id: ObjectId.createFromHexString(targetAssetID)}, userID);
+                return res.status(200).json({ message: 'Asset deleted successfully', assetDeleted });
             }
         }
     } catch (error) {

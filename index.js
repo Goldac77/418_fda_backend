@@ -37,8 +37,8 @@ app.post("/roles", async (req, res) => {
     const { roleName } = req.body;
     try {
         const result = await executeQuery('insertOne', 'Role', { Role_Name: roleName });
-        if(result == 409) {
-            return res.status(409).json({message: "Role already exists"});
+        if (result == 409) {
+            return res.status(409).json({ message: "Role already exists" });
         }
         res.status(201).json({ message: 'Role created successfully', result });
     } catch (error) {
@@ -56,8 +56,8 @@ app.post("/users", async (req, res) => {
         }
         const hashPassword = hashFunction(Password);
         const result = await executeQuery('insertOne', 'User', { Password: hashPassword, Email, Role_ID: role[0]._id });
-        if(result == 409) {
-            return res.status(409).json({message: "User already exists"});
+        if (result == 409) {
+            return res.status(409).json({ message: "User already exists" });
         }
         res.status(201).json({ message: 'User created successfully', result });
     } catch (error) {
@@ -66,12 +66,12 @@ app.post("/users", async (req, res) => {
     }
 })
 
-app.post("/assetStatus", async(req, res) => {
-    const {statusName} = req.body;
+app.post("/assetStatus", async (req, res) => {
+    const { statusName } = req.body;
     try {
         const result = await executeQuery('insertOne', 'AssetStatus', { Status_Name: statusName });
-        if(result == 409) {
-            return res.status(409).json({message: "Asset status already exists"});
+        if (result == 409) {
+            return res.status(409).json({ message: "Asset status already exists" });
         }
         res.status(201).json({ message: 'Asset status created successfully', result });
     } catch (error) {
@@ -80,9 +80,9 @@ app.post("/assetStatus", async(req, res) => {
     }
 })
 
-app.get("/roles", async(req, res) => {
+app.get("/roles", async (req, res) => {
     const roleData = await executeQuery("find", "Role", {}, null);
-    res.json({roleData});
+    res.json({ roleData });
 })
 
 //DO NOT TOUCH THE CODE ABOVE, ELSE I'LL COME FOR YOU!!
@@ -94,7 +94,7 @@ app.get("/users/:userID", async (req, res) => {
     const getUserAggregationPipeline = () => {
         return [
             {
-                $match: { }
+                $match: {}
             },
             {
                 $lookup: {
@@ -126,7 +126,7 @@ app.get("/users/:userID", async (req, res) => {
             const pipeline = getUserAggregationPipeline();
             const userData = await executeQuery("aggregate", "User", pipeline, userID);
             //remove user passwords
-            for(const data of userData) {
+            for (const data of userData) {
                 delete data["Password"];
                 delete data["Role_ID"];
             }
@@ -217,7 +217,7 @@ app.post("/login", async (req, res) => {
             // Fetch role name using the role ID from the user
             const roleID = user[0].Role_ID;
             const role = await executeQuery("find", "Role", { _id: roleID }, userID);
-            return res.status(200).json({ message: "Login successful" , roleName: role[0].Role_Name});
+            return res.status(200).json({ message: "Login successful", roleName: role[0].Role_Name });
         } else {
             return res.status(401).json({ message: "Incorrect password" });
         }
@@ -238,9 +238,9 @@ app.post("/assets/:userID", async (req, res) => {
 
         if (isAuthorized) {
             // Insert asset data into the database
-            const status = await executeQuery("find", "AssetStatus", {Status_Name: assetStatus}, userID);
-            if(status.length == 0) {
-                return res.status(404).json({message: "Invalid Status"});
+            const status = await executeQuery("find", "AssetStatus", { Status_Name: assetStatus }, userID);
+            if (status.length == 0) {
+                return res.status(404).json({ message: "Invalid Status" });
             }
             const result = await executeQuery('insertOne', 'Asset', {
                 Tag_ID: tagID,
@@ -250,8 +250,8 @@ app.post("/assets/:userID", async (req, res) => {
                 Status_ID: status[0]._id
             });
 
-            if(result == 409) {
-                return res.status(409).json({message: "Asset already exists"});
+            if (result == 409) {
+                return res.status(409).json({ message: "Asset already exists" });
             }
             return res.status(201).json({ message: 'Asset added successfully', asset: result });
         } else {
@@ -276,7 +276,7 @@ app.delete("/user/:userID/:targetUserID", async (req, res) => {
             if (invaldTargetId) {
                 return res.status(404).json({ error: 'User not found' });
             } else {
-                const userDeleted = await executeQuery("deleteOne", "User", {_id: ObjectId.createFromHexString(targetUserID)}, userID);
+                const userDeleted = await executeQuery("deleteOne", "User", { _id: ObjectId.createFromHexString(targetUserID) }, userID);
                 return res.status(200).json({ message: 'User deleted successfully', userDeleted });
             }
         } else {
@@ -300,10 +300,10 @@ app.delete("/asset/:userID/:targetAssetID", async (req, res) => {
             return res.status(403).json({ message: "You aren't authorized" });
         } else {
             const invaldTargetId = !ObjectId.isValid(targetAssetID);
-            if(invaldTargetId) {
+            if (invaldTargetId) {
                 return res.status(404).json({ error: 'Asset not found' });
             } else {
-                const assetDeleted = await executeQuery("deleteOne", "Asset", {_id: ObjectId.createFromHexString(targetAssetID)}, userID);
+                const assetDeleted = await executeQuery("deleteOne", "Asset", { _id: ObjectId.createFromHexString(targetAssetID) }, userID);
                 return res.status(200).json({ message: 'Asset deleted successfully', assetDeleted });
             }
         }
@@ -332,15 +332,15 @@ app.put("/user/:userID", async (req, res) => {
 
         // If there's a new role name, fetch the corresponding Role_ID
         if (newRoleName) {
-            const role = await executeQuery("find", "Role", { Role_Name: newRoleName }, userID);
+            const role = await executeQuery('find', 'Role', { Role_Name: newRoleName }, null);
             if (role.length === 0) {
-                return res.status(404).json({ message: "Role not found" });
+                return res.status(400).json({ error: 'Role not found' });
             }
             update.Role_ID = role[0]._id;
         }
 
         // Update user details in the database
-        const result = await executeQuery("updateOne", "User", { _id: ObjectId.createFromHexString(targetUserID) }, { $set: update }, userID);
+        const result = await executeQuery("updateOne", "User", { old: { _id: ObjectId.createFromHexString(targetUserID) }, new: { $set: update } }, userID);
 
         // Check if any user was updated
         if (result.matchedCount === 0) {

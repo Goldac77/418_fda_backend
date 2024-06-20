@@ -1,6 +1,6 @@
 import createConnection from "./db_connection.js";
 import dotenv from "dotenv";
-import {logsRequest} from './logs.js'
+import { logsRequest } from './logs.js'
 
 dotenv.config();
 
@@ -8,7 +8,7 @@ const executeQuery = async (operation, collectionName, params, userID) => {
     const client = await createConnection();
     const db = client.db(process.env.DB_NAME);
     const collection = db.collection(collectionName); //Similar to mysql table
-    
+
     try {
         let results;
         let exists;
@@ -19,7 +19,7 @@ const executeQuery = async (operation, collectionName, params, userID) => {
                 break;
             case 'insertOne':
                 exists = await collection.find(params).toArray();
-                if(exists.length > 0) {
+                if (exists.length > 0) {
                     console.log("Data already exists");
                     return 409
                 }
@@ -30,6 +30,9 @@ const executeQuery = async (operation, collectionName, params, userID) => {
                 break;
             case 'deleteOne':
                 results = await collection.deleteOne(params);
+                break;
+            case 'aggregate':
+                results = await collection.aggregate(params).toArray();
                 break;
             default:
                 throw new Error(`Unsupported operation: ${operation}`);

@@ -6,6 +6,7 @@ import executeQuery from "./utils/db_queryExecute.js";
 import hashFunction from "./utils/hash.js";
 import getLogs from "./utils/getLogs.js";
 import checkRole from "./utils/authorization.js";
+import { ObjectId } from "mongodb";
 
 const app = express();
 const port = 3000;
@@ -89,13 +90,46 @@ app.get("/roles", async(req, res) => {
 //This retrieves all user data
 app.get("/users/:userID", async (req, res) => {
     const { userID } = req.params;
+
+    const getUserAggregationPipeline = () => {
+        return [
+            {
+                $match: { _id: ObjectId.createFromHexString(userID) }
+            },
+            {
+                $lookup: {
+                    from: "Role",
+                    localField: "Role_ID",
+                    foreignField: "_id",
+                    as: "role"
+                }
+            },
+            {
+                $unwind: "$role"
+            },
+            {
+                $project: {
+                    Password: 0,
+                    "role._id": 0,
+                    "role.Role_ID": 0
+                }
+            }
+        ];
+    };
+
     try {
-        const accessLevel = checkRole(userID);
-        const isNotAuthorized = accessLevel == "Asset Manager";
+        const accessLevel = await checkRole(userID);
+        const isNotAuthorized = accessLevel == "Asset Manager" || accessLevel == 404;
         if (isNotAuthorized) {
             return res.status(403).json({ message: "You aren't authorized" });
         } else {
-            const userData = await executeQuery("find", "User", {}, userID);
+            const pipeline = getUserAggregationPipeline();
+            const userData = await executeQuery("aggregate", "User", pipeline, userID);
+            //remove user passwords
+            for(const data of userData) {
+                delete data["Password"];
+                delete data["Role_ID"];
+            }
             return res.status(200).json({ userData });
         }
     } catch (error) {
@@ -107,8 +141,34 @@ app.get("/users/:userID", async (req, res) => {
 //Get all assets
 app.get("/assets/userID", async (req, res) => {
     const { userID } = req.params;
+    const getAssetAggregationPipeline = () => {
+        return [
+            {
+                $lookup: {
+                    from: "AssetStatus",
+                    localField: "Status_ID",
+                    foreignField: "Status_ID",
+                    as: "status"
+                }
+            },
+            {
+                $unwind: "$status"
+            },
+            {
+                $project: {
+                    _id: 1,
+                    Tag_ID: 1,
+                    Serial_Number: 1,
+                    Asset_Name: 1,
+                    Procurement_Date: 1,
+                    "status.Status_Name": 1
+                }
+            }
+        ];
+    };
     try {
-        const assets = await executeQuery("find", "Asset", {}, userID);
+        const pipeline = getAssetAggregationPipeline();
+        const assets = await executeQuery("aggregate", "Asset", pipeline, userID);
         return res.status(200).json({ assets });
     } catch (error) {
         console.error('Failed to retrieve assets:', error);
@@ -121,8 +181,8 @@ app.get("/logs/:userID", async (req, res) => {
     const { userID } = req.params;
 
     try {
-        const accessLevel = checkRole(userID);
-        const isNotAuthorized = accessLevel == "Department Head";
+        const accessLevel = await checkRole(userID);
+        const isNotAuthorized = accessLevel == "Department Head" || accessLevel == 404;
         if (isNotAuthorized) {
             return res.status(403).json({ message: "You aren't authorized" });
         } else {
@@ -141,7 +201,7 @@ app.post("/login", async (req, res) => {
     const hashPassword = hashFunction(password);
 
     try {
-        const user = await executeQuery('find', 'User', { User_ID: userID });
+        const user = await executeQuery('find', 'User', { _id: ObjectId.createFromHexString(userID) });
 
         if (user.length === 0) {
             return res.status(401).json({ message: "Incorrect userID" });
@@ -152,9 +212,9 @@ app.post("/login", async (req, res) => {
 
         if (isPasswordMatch) {
             // Fetch role name using the role ID from the user
-            const roleID = user[0]._id;
-            const role = await executeQuery("find", "Role", { Role_ID: roleID }, userID);
-            return res.status(200).json({ message: "Login successful" }, { userID, role });
+            const roleID = user[0].Role_ID;
+            const role = await executeQuery("find", "Role", { _id: roleID }, userID);
+            return res.status(200).json({ message: "Login successful" , roleName: role[0].Role_Name});
         } else {
             return res.status(401).json({ message: "Incorrect password" });
         }
@@ -170,7 +230,7 @@ app.post("/assets/userID", async (req, res) => {
     const { assetName, serialNumber, tagID, procurementDate, assetStatus } = req.body;
     try {
 
-        const accessLevel = checkRole(userID);
+        const accessLevel = await checkRole(userID);
         const isAuthorized = accessLevel == "Asset Manager" || accessLevel == "Admin";
 
         if (isAuthorized) {
@@ -205,11 +265,11 @@ app.delete("/user/:userID/:targetUserID", async (req, res) => {
     const { userID, targetUserID } = req.params;
 
     try {
-        const accessLevel = checkRole(userID);
+        const accessLevel = await checkRole(userID);
         const isAuthorized = accessLevel == "Admin" || accessLevel == "Department Head";
 
         if (isAuthorized) {
-            const userDeleted = await executeQuery("deleteOne", "User", {targetUserID}, userID);
+            const userDeleted = await executeQuery("deleteOne", "User", {_id: ObjectId.createFromHexString(targetUserID)}, userID);
             if (userDeleted) {
                 return res.status(200).json({ message: 'User deleted successfully' });
             } else {
@@ -229,13 +289,13 @@ app.delete("/asset/:userID/:targetAssetID", async (req, res) => {
     const { userID, targetAssetID } = req.params;
 
     try {
-        const accessLevel = checkRole(userID);
-        const isNotAuthorized = accessLevel == "Department Head";
+        const accessLevel = await checkRole(userID);
+        const isNotAuthorized = accessLevel == "Department Head" || accessLevel == 404;
 
         if (isNotAuthorized) {
             return res.status(403).json({ message: "You aren't authorized" });
         } else {
-            const assetDeleted = await executeQuery("deleteOne", "Asset", {Asset_ID: targetAssetID}, userID);
+            const assetDeleted = await executeQuery("deleteOne", "Asset", {_id: ObjectId.createFromHexString(targetAssetID)}, userID);
             if (assetDeleted) {
                 return res.status(200).json({ message: 'Asset deleted successfully' });
             } else {
@@ -254,8 +314,8 @@ app.put("/user/:userID", async (req, res) => {
     const { newEmail, newRoleName, targetUserID } = req.body;
 
     try {
-        const accessLevel = checkRole(userID);
-        const isNotAuthorized = accessLevel == "Asset Manager";
+        const accessLevel = await checkRole(userID);
+        const isNotAuthorized = accessLevel == "Asset Manager" || accessLevel == 404;
 
         if (isNotAuthorized) {
             return res.status(403).json({ message: "You are not authorized to update user details" });
@@ -267,7 +327,7 @@ app.put("/user/:userID", async (req, res) => {
         if (newRoleName) update.Role_Name = newRoleName;
 
         // Update user details in the database
-        const result = await executeQuery("updateOne", "Users", { User_ID: targetUserID }, { $set: update }, userID);
+        const result = await executeQuery("updateOne", "Users", { _id: ObjectId.createFromHexString(targetUserID) }, { $set: update }, userID);
         
         // Check if any user was updated
         if (result.modifiedCount === 0) {

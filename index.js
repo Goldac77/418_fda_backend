@@ -225,7 +225,7 @@ app.post("/login", async (req, res) => {
 })
 
 //Add asset 
-app.post("/assets/userID", async (req, res) => {
+app.post("/assets/:userID", async (req, res) => {
     const { userID } = req.params;
     const { assetName, serialNumber, tagID, procurementDate, assetStatus } = req.body;
     try {

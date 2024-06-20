@@ -211,7 +211,7 @@ app.delete("/user/:userID/:targetUserID", async (req, res) => {
 })
 
 //Endpoint to delete asset
-app.delete("/user/:userID/:targetAssetID", async (req, res) => {
+app.delete("/asset/:userID/:targetAssetID", async (req, res) => {
     const { userID, targetAssetID } = req.params;
 
     try {

@@ -16,7 +16,9 @@ dotenv.config();
 app.use(cors())
 app.use(express.json())
 app.use((req, res, next) => {
+    const userID = req.params.userID || null;
     const httpLogData = {
+        userID: userID,
         method: req.method,
         url: req.url,
         headers: req.headers,

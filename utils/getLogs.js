@@ -1,19 +1,9 @@
-import axios from 'axios';
-import dotenv from 'dotenv';
-dotenv.config();
 import logArray from './localLogs.js';
+import executeQuery from './db_queryExecute.js';
 
 const getLogs = async() => {
     try {
-        const response = await axios.get("https://api.github.com/gists", {
-            headers: {
-                "Accept": "application/vnd.github.v3+json",
-                "Authorization": `Bearer ${process.env.GITHUB_AUTH}`,
-                "X-GitHub-Api-Version": "2022-11-28"
-            }
-        })
-
-        const remoteLogs = getRemoteLogUrl(response.data);
+        const remoteLogs = await getRemoteLog();
         const localLogs = logArray;
 
         return { remoteLogs, localLogs };
@@ -22,14 +12,10 @@ const getLogs = async() => {
     }
 }
 
-function getRemoteLogUrl(data) {
-    const result = []
-    for(const i of data) {
-        result.push(i.html_url);
-    }
-
-    return result;
-    
+// get logs from database
+const getRemoteLog = async() => {
+    const remoteLog = await executeQuery("find", "Logs", { }, userID);
+    return remoteLog;
 }
 
 export default getLogs;

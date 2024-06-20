@@ -4,52 +4,53 @@ import {logsRequest} from './logs.js'
 
 dotenv.config();
 
-const executeQuery = async (query, params, userID) => {
-    const connection = createConnection();
+const executeQuery = async (operation, collectionName, params, userID) => {
+    const client = await createConnection();
+    const db = client.db(process.env.DB_NAME);
+    const collection = db.collection(collectionName); //Similar to mysql table
     
     try {
-        await new Promise((resolve, reject) => {
-            connection.connect((err) => {
-                if (err) {
-                    console.log("Failed to connect to database");
-                    reject(err);
-                } else {
-                    console.log(`Connected to ${process.env.DB_NAME} database`);
-                    resolve();
-                }
-            });
-        });
+        let results;
+        let exists;
 
-        const results = await new Promise((resolve, reject) => {
-            connection.query(query, params, (error, results) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    const logData = {
-                        userID,
-                        query,
-                        params,
-                        timestamp: new Date().toISOString()
-                    };
-                    logsRequest(logData);
-                    resolve(results);
+        switch (operation) {
+            case 'find':
+                results = await collection.find(params).toArray();
+                break;
+            case 'insertOne':
+                exists = await collection.find(params).toArray();
+                if(exists.length > 0) {
+                    console.log("Data already exists");
+                    return 409
                 }
-            });
-        });
+                results = await collection.insertOne(params);
+                break;
+            case 'updateOne':
+                results = await collection.updateOne(params.filter, params.update);
+                break;
+            case 'deleteOne':
+                results = await collection.deleteOne(params);
+                break;
+            default:
+                throw new Error(`Unsupported operation: ${operation}`);
+        }
+
+        const logData = {
+            userID,
+            operation,
+            collectionName,
+            params,
+            timestamp: new Date().toISOString()
+        };
+        logsRequest(logData);
 
         return results;
+    } catch (error) {
+        console.error('Error executing query:', error);
+        throw error;
     } finally {
-        await new Promise((resolve, reject) => {
-            connection.end((err) => {
-                if (err) {
-                    console.error('Error closing connection:', err);
-                    reject(err);
-                } else {
-                    console.log("Database connection closed")
-                    resolve();
-                }
-            });
-        });
+        console.log("Closing database connection");
+        client.close();
     }
 };
 

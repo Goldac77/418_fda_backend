@@ -1,7 +1,4 @@
 #rename this file to ".env" and give the variables their required data
 
-DB_HOST = "DB HOST NAME"
-DB_USER = "DB USER NAME"
-DB_PASSWORD = "DB PASSWORD"
-DB_NAME = "DB NAME"
-GITHUB_AUTH = "GITHUB PERSONAL AUTH TOKEN"
+DB_URL = "MONGODB URL"
+DB_NAME = "MONGODB DATABASE NAME"

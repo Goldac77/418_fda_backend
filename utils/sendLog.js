@@ -1,34 +1,13 @@
-import axios from 'axios';
-import dotenv from 'dotenv';
 import logArray from './localLogs.js';
-dotenv.config();
+import executeQuery from './db_queryExecute.js';
 
 
 const sendLogCopy = async () => {
     try {
-        const files = {};
-        logArray.forEach((log, index) => {
-            files[`log_${index}.json`] = { content: JSON.stringify(log, null, 2) };
-        });
-
-        const response = await axios.post('https://api.github.com/gists',
-            {
-                description: '418_FDA_Logs',
-                public: false,
-                files: files
-            },
-            {
-                headers: {
-                    "Accept": "application/vnd.github.v3+json",
-                    "Authorization": `Bearer ${process.env.GITHUB_AUTH}`,
-                    "X-GitHub-Api-Version": "2022-11-28"
-                }
-            }
-        );
-
-        console.log('Log file uploaded to Gist:');
+        await executeQuery("insertOne", "Logs", {Content: JSON.stringify(logArray)}, null);
+        console.log('Log file uploaded to database');
     } catch (error) {
-        console.error('Error uploading log file to Gist:', error);
+        console.error('Error uploading log file to database', error);
     }
 }
 

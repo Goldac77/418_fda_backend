@@ -320,23 +320,31 @@ app.put("/user/:userID", async (req, res) => {
 
     try {
         const accessLevel = await checkRole(userID);
-        const isNotAuthorized = accessLevel == "Asset Manager" || accessLevel == 404;
+        const isNotAuthorized = accessLevel === "Asset Manager" || accessLevel === 404;
 
         if (isNotAuthorized) {
             return res.status(403).json({ message: "You are not authorized to update user details" });
         }
 
-        // Prepare update object with new user details
+        // Prepare the update object
         const update = {};
         if (newEmail) update.Email = newEmail;
-        if (newRoleName) update.Role_Name = newRoleName;
+
+        // If there's a new role name, fetch the corresponding Role_ID
+        if (newRoleName) {
+            const role = await executeQuery("find", "Role", { Role_Name: newRoleName }, userID);
+            if (role.length === 0) {
+                return res.status(404).json({ message: "Role not found" });
+            }
+            update.Role_ID = role[0]._id;
+        }
 
         // Update user details in the database
-        const result = await executeQuery("updateOne", "Users", { _id: ObjectId.createFromHexString(targetUserID) }, { $set: update }, userID);
-        
+        const result = await executeQuery("updateOne", "User", { _id: ObjectId.createFromHexString(targetUserID) }, { $set: update }, userID);
+
         // Check if any user was updated
-        if (result.modifiedCount === 0) {
-            return res.status(404).json({ message: "User not found or details unchanged" });
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ message: "User not found" });
         }
 
         return res.status(200).json({ message: "User details updated successfully" });

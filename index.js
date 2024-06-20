@@ -273,7 +273,7 @@ app.delete("/user/:userID/:targetUserID", async (req, res) => {
 
         if (isAuthorized) {
             const userDeleted = await executeQuery("deleteOne", "User", {_id: ObjectId.createFromHexString(targetUserID)}, userID);
-            if (userDeleted) {
+            if (userDeleted.acknowledged) {
                 return res.status(200).json({ message: 'User deleted successfully' });
             } else {
                 return res.status(404).json({ error: 'User not found' });
